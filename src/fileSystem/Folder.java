@@ -1,11 +1,18 @@
 package fileSystem;
 
 
-public class Folder extends ContainerParent implements Containable, Container {
+public class Folder extends ContainerParent{
 	
-	public Folder(String name, String path, Container parent) {
+	public Folder(String name, ContainerParent parent, String type) {
 		
-		super(name, path, 0, parent);
+		super(name, 0, parent, type);
+	}
+	
+	@Override
+	public void resetFileType() {
+		type = "folder";
+		for(EntityParent child : children.values())
+			child.resetFileType();
 		
 	}
 }

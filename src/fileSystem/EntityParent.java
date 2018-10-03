@@ -1,48 +1,49 @@
 package fileSystem;
 
-public class EntityParent {
+public abstract class EntityParent {
 	
-	protected int size;
-	protected String pathName;
-	protected String name;
-	protected Container parent;
-	
-	public EntityParent(String name, String path, int size, Container parent) {
+	int size;
+	String name;
+	transient ContainerParent parent;
+	String type;
+
+	public EntityParent(String name, int size, ContainerParent parent, String type) {
 		this.name = name;
-		pathName = path + "\\" + name;
 		this.size = size;
 		this.parent = parent;
+		this.type = type;
 	}
 	
-	public Container getParent() {
+	public ContainerParent getParent() {
 		return parent;
 	}
-
-	public void setParent(Container parent) {
-		this.parent = parent;
-	}
-
-	public void setSize(int size) {
-		this.size = size;
-	}
-
-	public void setPathName(String pathName) {
-		this.pathName = pathName;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
+	
 	public int getSize() {
 		return size;
 	}
 	
-	public String getPathName() {
-		return pathName;
+	public String getPath() {
+		return parent.getPath() + "\\" + name;
 	}
 	
 	public String getName() {
 		return name;
+	}
+	
+	protected void initParentFromChildren() {
+		if(this instanceof ContainerParent) {
+		ContainerParent current = (ContainerParent)this;
+			for(EntityParent child:current.getChildren()) {
+				child.setParent(current);
+				child.initParentFromChildren();
+			}
+		}
+	}
+
+	protected void setParent(ContainerParent parent) {
+		this.parent = (ContainerParent) parent;
+	}
+
+	public void resetFileType() {
 	}
 }

@@ -1,84 +1,76 @@
 package fileSystem;
 
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 
-public class ContainerParent extends EntityParent implements Container{
+public abstract class ContainerParent extends EntityParent{
 	
-	ArrayList<Containable> children;
+	HashMap<String, EntityParent> children;
+	boolean hasBeenChanged;
 
-	public ContainerParent(String name, String path, int size, Container parent) {
-		super(name, path, size, parent);
-		children = new ArrayList<Containable>();
+	public ContainerParent(String name, int size, ContainerParent parent, String type) {
+		super(name, size, parent, type);
+		children = new HashMap<String, EntityParent>();
+		hasBeenChanged = true;
+	}
+
+	public Collection<EntityParent> getChildren() {
+		return children.values();
 	}
 
 	@Override
-	public ArrayList<Containable> getChildren() {
-		return children;
+	public int getSize() {
+		if(!hasBeenChanged) return size;
+		int totalSize = 0;
+		for(EntityParent child : children.values()) {
+			totalSize += child.getSize();
+		}
+		size = totalSize;
+		hasBeenChanged = false;
+		return totalSize;
 	}
 
-	@Override
-	public void calculateSize() {
-		size = 0;
-		for(Containable child:children)
-			size += child.getSize();
-	}
-
-	@Override
-	public Container getParent() {
+	public ContainerParent getParent() {
 		return parent;
 	}
 
-	@Override
-	public void addChild(Containable child) {
-		Container parent = this;
-		children.add(child);
-		while(parent != null) {
-			parent.calculateSize();
-			parent = parent.getParent();
+	public void addChild(EntityParent child) {
+		child.setParent(this);
+		children.put(child.getName(), child);
+		hasBeenChanged = true;
+	}
+	
+	public boolean removeChild(EntityParent child) {
+		if(!children.remove(child.getName(), child)) {
+			throw new FileSystem.InvalidFilePathException("The specified file does not exist in " + name);
 		}
-		
+			hasBeenChanged = true;
+			return true;	
 	}
 
-	@Override
-	public boolean removeChild(Containable child) {
-		Container parent = this;
-		if(!children.remove(child)) {
-			System.out.println("The specified file does not exist in " + name);
-			return false;
-		} else {
-			while(parent != null) {
-				parent.calculateSize();
-				parent = parent.getParent();
-			}
-			return true;
-		}
-			
-	}
-
-	@Override
 	public boolean removeChild(String childName) {
-		Container parent = this;
-		for(Containable child:children)
-			if(child.getName().equals(childName)) {
-				children.remove(child);
-				while(parent != null) {
-					parent.calculateSize();
-					parent = parent.getParent();
-				}
-				return true;
-			}
-		System.out.println("The file with name " + childName + " does not exist in " + name);
-		return false;
+		if(children.containsKey(childName)) {
+			children.remove(childName);
+			hasBeenChanged = true;
+			return true;
+		} 
+		else throw new FileSystem.InvalidFilePathException("The file with name " + childName + " does not exist in " + name);
 	}
 		
 
-	@Override
-	public Containable getChild(String childName) {
-		for(Containable child:children)
-			if(child.getName().equals(childName))
-				return child;
-		System.out.println("The file with name " + childName + " does not exist in " + name);
-		return null;
+	public EntityParent getChild(String childName) {
+		if(children.containsKey(childName))
+			return children.get(childName);
+		else throw new FileSystem.InvalidFilePathException("The file with name " + childName + " does not exist in " + name);
+	}
+	
+	public void toggleParentHasBeenChanged() {
+		hasBeenChanged = true;
+		parent.toggleParentHasBeenChanged();
+	}
+
+	public Collection<String> getChildrenNames() {
+		return children.keySet();
 	}
 
 }

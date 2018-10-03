@@ -1,16 +1,28 @@
 package fileSystem;
 
-public class ZipFile extends ContainerParent implements Containable, Container{
+public class ZipFile extends ContainerParent{
 
-	public ZipFile(String name, String path, Container parent) {
-		super(name, path, 0, parent);
+	public ZipFile(String name, ContainerParent parent, String type) {
+		super(name, 0, parent, type);
 	}
 	
 	@Override
-	public void calculateSize() {
-		size = 0;
-		for(Containable child:children) {
-			size += child.getSize()/2;
+	public int getSize() {
+		if(!hasBeenChanged) return size;
+		int totalSize = 0;
+		for(EntityParent child : children.values()) {
+			totalSize += child.getSize();
 		}
+		size = totalSize/2;
+		hasBeenChanged = false;
+		return size;
+	}
+	
+	@Override
+	public void resetFileType() {
+		type = "zip";
+		for(EntityParent child : children.values())
+			child.resetFileType();
+		
 	}
 }
